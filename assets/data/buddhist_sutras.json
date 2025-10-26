@@ -21,6 +21,8 @@
       "isFavorite": false,
       "readingCount": 0,
       "lastRead": null
+      ,
+      "coverImage": "assets/images/sutra_1.jpg"
     },
     {
       "id": "2",
@@ -43,6 +45,8 @@
       "isFavorite": false,
       "readingCount": 0,
       "lastRead": null
+      ,
+      "coverImage": "assets/images/sutra_2.jpg"
     },
     {
       "id": "3",
@@ -65,6 +69,8 @@
       "isFavorite": false,
       "readingCount": 0,
       "lastRead": null
+      ,
+      "coverImage": "assets/images/sutra_3.jpg"
     },
     {
       "id": "4",
@@ -87,6 +93,8 @@
       "isFavorite": false,
       "readingCount": 0,
       "lastRead": null
+      ,
+      "coverImage": "assets/images/sutra_4.jpg"
     },
     {
       "id": "5",
@@ -109,6 +117,8 @@
       "isFavorite": false,
       "readingCount": 0,
       "lastRead": null
+      ,
+      "coverImage": "assets/images/sutra_5.jpg"
     }
   ],
   "categories": [
