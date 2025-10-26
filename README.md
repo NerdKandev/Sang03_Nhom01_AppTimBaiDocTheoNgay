@@ -28,13 +28,21 @@
 
 ### ✅ **UI/Theme (Người 2)**
  HomePage – Danh sách bài Kinh nổi bật / danh mục chính (JSON demo)
+ 
  SearchPage – Tìm theo tên, tác giả, thể loại (lọc trong JSON)
+ 
  ReadPage – Giao diện đọc Kinh, hỗ trợ Dark/Light mode
+ 
  AudioPage / Widget – Nút Phát / Tạm dừng, liên kết bài Kinh
+ 
  Navigation – BottomBar / Drawer giữa Home, Search, Favorites, Settings
+ 
  SettingsPage – Chuyển đổi Dark/Light mode, lưu trạng thái bằng SharedPreferences
+ 
  ThemeProvider – Quản lý chủ đề & lưu trạng thái theme
+ 
  X chua lam duoc JSON Loader – Đọc dữ liệu từ assets/sutras.json
+ 
  Reusable Widgets – SutraCard, AudioPlayerWidget, SearchBar
 
 ### 🔄 **Đang phát triển**
