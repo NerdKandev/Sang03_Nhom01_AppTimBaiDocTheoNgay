@@ -51,3 +51,20 @@ app.*.map.json
 google-services.json
 GoogleService-Info.plist
 
+# Local user databases and caches
+*.db
+*.sqlite
+*.hive
+*.db-journal
+
+# Audio files / cached media
+*.wav
+*.mp3
+*.m4a
+*.flac
+
+# ML / model files
+*.tflite
+*.onnx
+*.h5
+
