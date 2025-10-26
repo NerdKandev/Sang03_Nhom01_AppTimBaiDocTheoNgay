@@ -34,7 +34,7 @@
  Navigation – BottomBar / Drawer giữa Home, Search, Favorites, Settings
  SettingsPage – Chuyển đổi Dark/Light mode, lưu trạng thái bằng SharedPreferences
  ThemeProvider – Quản lý chủ đề & lưu trạng thái theme
- JSON Loader – Đọc dữ liệu từ assets/sutras.json
+ X chua lam duoc JSON Loader – Đọc dữ liệu từ assets/sutras.json
  Reusable Widgets – SutraCard, AudioPlayerWidget, SearchBar
 
 ### 🔄 **Đang phát triển**
