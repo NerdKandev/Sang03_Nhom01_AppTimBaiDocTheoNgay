@@ -34,7 +34,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -63,7 +63,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
               // Sutra Info Card
               Card(
                 elevation: 4,
-                color: const Color(0xFFE3F2FD),
+                color: const Color(0xFF2196F3),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -91,7 +91,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
                         children: [
                           _buildInfoChip(
                             widget.sutra.category,
-                            Colors.blue,
+                            const Color(0xFF2196F3),
                           ),
                           const SizedBox(width: 8),
                           _buildInfoChip(
@@ -111,7 +111,29 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
               ),
               
               const SizedBox(height: 24),
-              
+              // Cover image (use asset if available; errorBuilder gives a graceful fallback)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  widget.sutra.coverImage ?? 'assets/images/placeholder.jpg',
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 180,
+                    width: double.infinity,
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 56,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               // Audio Player Widget
               AudioPlayerWidget(
                 sutra: widget.sutra,
@@ -276,7 +298,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showSettingsDialog,
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         child: const Icon(Icons.text_fields, color: Colors.white),
         tooltip: 'Cài đặt đọc',
       ),
@@ -333,7 +355,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
             ),
             const SizedBox(height: 20),
             ListTile(
-              leading: const Icon(Icons.play_arrow, color: Colors.blue),
+              leading: const Icon(Icons.play_arrow, color: Color(0xFF2196F3)),
               title: const Text('Đọc bình thường'),
               onTap: () {
                 Navigator.pop(context);
@@ -422,7 +444,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
                 const SizedBox(width: 8),
                 _buildColorOption(Colors.amber[50]!, 'Vàng nhạt'),
                 const SizedBox(width: 8),
-                _buildColorOption(Colors.blue[50]!, 'Xanh nhạt'),
+                _buildColorOption(const Color(0xFF2196F3), 'Xanh nhạt'),
               ],
             ),
             
@@ -440,7 +462,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
                 const SizedBox(width: 8),
                 _buildTextColorOption(Colors.brown, 'Nâu'),
                 const SizedBox(width: 8),
-                _buildTextColorOption(Colors.blue[800]!, 'Xanh đậm'),
+                _buildTextColorOption(const Color(0xFF2196F3), 'Xanh đậm'),
               ],
             ),
           ],
@@ -469,7 +491,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: _backgroundColor == color ? Colors.blue : Colors.grey,
+            color: _backgroundColor == color ? const Color(0xFF2196F3) : Colors.grey,
             width: 2,
           ),
         ),
@@ -494,7 +516,7 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: _textColor == color ? Colors.blue : Colors.grey,
+            color: _textColor == color ? const Color(0xFF2196F3) : Colors.grey,
             width: 2,
           ),
         ),

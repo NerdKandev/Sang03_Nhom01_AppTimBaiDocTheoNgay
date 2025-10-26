@@ -66,6 +66,11 @@ class DataService {
     return _sutras.where((sutra) => sutra.category == category).toList();
   }
 
+  // Get favorite sutras
+  List<Sutra> getFavoriteSutras() {
+    return _sutras.where((sutra) => sutra.isFavorite).toList();
+  }
+
   // Search sutras
   List<Sutra> searchSutras(String query) {
     if (query.isEmpty) return _sutras;

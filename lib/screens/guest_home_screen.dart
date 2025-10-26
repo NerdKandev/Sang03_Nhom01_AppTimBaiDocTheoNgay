@@ -21,7 +21,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('App Tìm Bài Đọc - Khách'),
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -42,7 +42,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         items: const [
@@ -92,7 +92,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           Card(
             margin: const EdgeInsets.only(bottom: 24),
             elevation: 4,
-            color: const Color(0xFFE3F2FD),
+            color: const Color(0xFF2196F3),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -138,7 +138,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                   'Tổng số kinh',
                   _dataService.sutras.length.toString(),
                   Icons.library_books,
-                  Colors.blue,
+                  const Color(0xFF2196F3),
                 ),
               ),
               const SizedBox(width: 12),
@@ -200,7 +200,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                 icon: Icons.menu_book,
                 title: 'Đọc kinh',
                 subtitle: 'Khám phá các kinh Phật',
-                color: Colors.blue,
+                color: const Color(0xFF2196F3),
                 onTap: () {
                   setState(() {
                     _currentIndex = 1; // Navigate to Readings tab

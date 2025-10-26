@@ -3,6 +3,7 @@ import '../services/data_service.dart';
 import '../models/sutra.dart';
 import 'sutra_reading_screen.dart';
 import 'admin_user_management_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,9 +24,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('App Tìm Bài Đọc Theo Ngày'),
-        backgroundColor: const Color(0xFF2196F3),
-        foregroundColor: Colors.white,
+        title: const Text('📿 Đọc Kinh Hàng Ngày'),
+  backgroundColor: const Color(0xFF2196F3),
+        foregroundColor: const Color.fromARGB(255, 255, 252, 221),
         actions: [
           // Admin User Management Button (for demo purposes, always show)
           IconButton(
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         items: const [
@@ -110,71 +111,81 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome Card
-          Card(
+          // (welcoming text card removed - now only the image banner remains)
+          
+          // Welcome banner with background image and top-down fade
+          Container(
             margin: const EdgeInsets.only(bottom: 24),
-            elevation: 4,
-            color: const Color(0xFFE3F2FD),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            height: 360,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.waving_hand, color: const Color(0xFF2196F3), size: 28),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Chào mừng!',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: const Color(0xFF2196F3),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
+                  // Background image with safe fallback
+                  Image.asset(
+                    'assets/images/oar2.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => Container(color: const Color(0xFFEFEFEF)),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Hãy khám phá các bài đọc theo ngày và tìm hiểu thêm về Kinh Thánh.',
-                    style: TextStyle(fontSize: 16),
+
+                  // Top-down white gradient (fade to transparent) so top is light
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFFFFFFFF), // fully white at top
+                          Color(0x80FFFFFF), // semi-transparent white
+                          Color(0x00FFFFFF), // transparent
+                        ],
+                        stops: [0.0, 0.25, 0.7],
+                      ),
+                    ),
+                  ),
+
+                  // Slight dark overlay at bottom for contrast (subtle)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.08)],
+                          stops: const [0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Texts positioned near the top (in the lightest area)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🙏Chào mừng quý phật tử!',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                color: const Color(0xFF333333),
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Đọc kinh mỗi ngày để tâm hồn thanh thản, an yên.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF333333),
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          
-          // Quick Stats
-          Text(
-            'Thống kê nhanh',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: const Color(0xFF2196F3),
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 16),
-          
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Tổng số kinh',
-                  _dataService.sutras.length.toString(),
-                  Icons.library_books,
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Kinh đã đọc',
-                  _dataService.sutras.where((s) => s.readingCount > 0).length.toString(),
-                  Icons.check_circle,
-                  Colors.green,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           
           Row(
             children: [
@@ -203,8 +214,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Quick Actions
           Text(
             'Thao tác nhanh',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: const Color(0xFF2196F3),
+    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+  color: const Color(0xFF2196F3),
                   fontWeight: FontWeight.bold,
                 ),
           ),
@@ -220,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildQuickActionCard(
                 'Đọc hôm nay',
                 Icons.today,
-                Colors.blue,
+                const Color(0xFF2196F3),
                 () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Chức năng đang phát triển')),
@@ -594,24 +605,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSettingsPage() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.settings, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Cài đặt',
-            style: TextStyle(fontSize: 18, color: Colors.grey),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Chức năng đang phát triển',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    );
+    return const SettingsScreen();
   }
 
   Color _getDifficultyColor(String difficulty) {
@@ -630,6 +624,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

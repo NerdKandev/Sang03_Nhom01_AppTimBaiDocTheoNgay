@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'guest_home_screen.dart';
@@ -54,119 +56,164 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo or Icon
-              Icon(
-                Icons.account_circle,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
+      body: Stack(
+        children: [
+          // Background image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/placeholder.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: const Center(child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey)),
               ),
-              const SizedBox(height: 32),
-              
-              // Title
-              Text(
-                'Chào mừng đến với App Tìm Bài Đọc',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          // Blur + dim overlay
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+              child: Container(
+                color: Colors.black.withOpacity(0.35),
+              ),
+            ),
+          ),
+
+          // Foreground: centered form with semi-transparent card
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Card(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black.withOpacity(0.5)
+                      : Colors.white.withOpacity(0.85),
+                  elevation: 6,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          // Logo or Icon
+                          Icon(
+                            Icons.account_circle,
+                            size: 80,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Title
+                          Text(
+                            'Chào mừng đến với App Tìm Bài Đọc',
+                            style:
+                                Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Username field
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Tên đăng nhập',
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Vui lòng nhập tên đăng nhập';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Password field
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: const InputDecoration(
+                              labelText: 'Mật khẩu',
+                              prefixIcon: Icon(Icons.lock),
+                            ),
+                            obscureText: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Vui lòng nhập mật khẩu';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Login button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Text('Đăng Nhập'),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Register link
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text('Chưa có tài khoản? Đăng ký ngay'),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Guest access button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // Navigate to guest home screen
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const GuestHomeScreen()),
+                                );
+                              },
+                              icon: const Icon(Icons.person_outline),
+                              label: const Text('Tiếp tục với tư cách Khách'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                textStyle: const TextStyle(fontSize: 16),
+                                side: const BorderSide(color: Color(0xFF2196F3)),
+                                foregroundColor: const Color(0xFF2196F3),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              // Username field
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Tên đăng nhập',
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập tên đăng nhập';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              // Password field
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Mật khẩu',
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập mật khẩu';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              
-              // Login button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Đăng Nhập'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Register link
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Chưa có tài khoản? Đăng ký ngay'),
-              ),
-              const SizedBox(height: 16),
-              
-              // Guest access button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // Navigate to guest home screen
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const GuestHomeScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.person_outline),
-                  label: const Text('Tiếp tục với tư cách Khách'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 16),
-                    side: const BorderSide(color: Color(0xFF2196F3)),
-                    foregroundColor: const Color(0xFF2196F3),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

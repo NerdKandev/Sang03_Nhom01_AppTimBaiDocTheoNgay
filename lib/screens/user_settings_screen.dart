@@ -362,7 +362,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                             icon: const Icon(Icons.play_arrow),
                             label: const Text('Test âm thanh'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: const Color(0xFF2196F3),
                               foregroundColor: Colors.white,
                             ),
                           ),
