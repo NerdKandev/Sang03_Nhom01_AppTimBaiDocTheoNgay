@@ -1,0 +1,60 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "name": "Tịnh Độ",
+      "description": "Các kinh về cõi Tịnh Độ và Phật A Di Đà",
+      "color": "#FF6B6B",
+      "icon": "lotus",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "sutraCount": 1,
+      "order": 1
+    },
+    {
+      "id": "2", 
+      "name": "Trí Tuệ",
+      "description": "Các kinh về trí tuệ Bát Nhã và Kim Cang",
+      "color": "#4ECDC4",
+      "icon": "lightbulb",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "sutraCount": 2,
+      "order": 2
+    },
+    {
+      "id": "3",
+      "name": "Giáo lý cơ bản", 
+      "description": "Các kinh cơ bản dành cho người mới bắt đầu",
+      "color": "#45B7D1",
+      "icon": "book",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "sutraCount": 1,
+      "order": 3
+    },
+    {
+      "id": "4",
+      "name": "Đại thừa",
+      "description": "Các kinh của truyền thống Đại thừa", 
+      "color": "#96CEB4",
+      "icon": "star",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "sutraCount": 1,
+      "order": 4
+    }
+  ],
+  "statistics": {
+    "totalCategories": 4,
+    "activeCategories": 4,
+    "inactiveCategories": 0,
+    "totalSutras": 5,
+    "averageSutrasPerCategory": 1.25
+  },
+  "lastUpdated": "2024-01-15T10:30:00Z"
+}

@@ -1,0 +1,169 @@
+import 'dart:convert';
+import 'dart:io';
+
+void main() {
+  // Tạo dữ liệu mẫu cho ứng dụng kinh Phật
+  final sampleData = {
+    "sutras": [
+      {
+        "id": "1",
+        "title": "Amitabha Sutra",
+        "titleVietnamese": "Kinh A Di Đà",
+        "titlePali": "Amitābha Sūtra",
+        "category": "Tịnh Độ",
+        "description": "Kinh dạy về cõi Tịnh Độ của Phật A Di Đà, giúp tâm được an lạc",
+        "content": "Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật...",
+        "fullContent": "Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật. Nam mô A Di Đà Phật.",
+        "readingTime": "15 phút",
+        "difficulty": "Dễ",
+        "tags": ["Tịnh Độ", "A Di Đà", "Cầu siêu", "An lạc"],
+        "dateAdded": "2024-01-01",
+        "isFavorite": false,
+        "readingCount": 0,
+        "lastRead": null
+      },
+      {
+        "id": "2",
+        "title": "Heart Sutra",
+        "titleVietnamese": "Kinh Bát Nhã Tâm Kinh",
+        "titlePali": "Prajñāpāramitā Hṛdaya Sūtra",
+        "category": "Trí Tuệ",
+        "description": "Kinh về trí tuệ Bát Nhã, ngắn gọn nhưng sâu sắc, giúp hiểu rõ bản chất của các pháp",
+        "content": "Quán Tự Tại Bồ Tát, hành thâm Bát Nhã Ba La Mật Đa thời...",
+        "fullContent": "Quán Tự Tại Bồ Tát, hành thâm Bát Nhã Ba La Mật Đa thời, chiếu kiến ngũ uẩn giai không, độ nhất thiết khổ ách. Xá Lợi Tử, sắc bất dị không, không bất dị sắc, sắc tức thị không, không tức thị sắc...",
+        "readingTime": "5 phút",
+        "difficulty": "Trung bình",
+        "tags": ["Bát Nhã", "Trí tuệ", "Tâm kinh", "Không tướng"],
+        "dateAdded": "2024-01-02",
+        "isFavorite": false,
+        "readingCount": 0,
+        "lastRead": null
+      },
+      {
+        "id": "3",
+        "title": "Dhammapada",
+        "titleVietnamese": "Kinh Pháp Cú",
+        "titlePali": "Dhammapada",
+        "category": "Giáo lý cơ bản",
+        "description": "Tuyển tập những câu kinh ngắn gọn, dễ hiểu, phù hợp cho người mới bắt đầu",
+        "content": "Tất cả các pháp đều do tâm tạo. Tâm dẫn đầu các pháp...",
+        "fullContent": "Tất cả các pháp đều do tâm tạo. Tâm dẫn đầu các pháp. Tâm làm chủ, tâm tạo tác. Nếu nói hay làm với tâm ô nhiễm, thì khổ sẽ theo sau như xe theo chân con bò kéo xe...",
+        "readingTime": "10 phút",
+        "difficulty": "Dễ",
+        "tags": ["Pháp cú", "Giáo lý", "Cơ bản", "Tâm"],
+        "dateAdded": "2024-01-03",
+        "isFavorite": false,
+        "readingCount": 0,
+        "lastRead": null
+      },
+      {
+        "id": "4",
+        "title": "Lotus Sutra",
+        "titleVietnamese": "Kinh Pháp Hoa",
+        "titlePali": "Saddharma Puṇḍarīka Sūtra",
+        "category": "Đại thừa",
+        "description": "Kinh quan trọng của Phật giáo Đại thừa, dạy về Phật tánh và sự giác ngộ",
+        "content": "Như Lai xuất hiện ở đời vì một đại sự nhân duyên...",
+        "fullContent": "Như Lai xuất hiện ở đời vì một đại sự nhân duyên. Như Lai muốn khai thị cho chúng sinh ngộ nhập Phật tri kiến, muốn chúng sinh thanh tịnh, muốn chúng sinh được giải thoát...",
+        "readingTime": "30 phút",
+        "difficulty": "Khó",
+        "tags": ["Pháp Hoa", "Đại thừa", "Phật tánh", "Giác ngộ"],
+        "dateAdded": "2024-01-04",
+        "isFavorite": false,
+        "readingCount": 0,
+        "lastRead": null
+      },
+      {
+        "id": "5",
+        "title": "Diamond Sutra",
+        "titleVietnamese": "Kinh Kim Cang",
+        "titlePali": "Vajracchedikā Prajñāpāramitā Sūtra",
+        "category": "Trí Tuệ",
+        "description": "Kinh về trí tuệ Kim Cang, dạy về tính không và sự giải thoát",
+        "content": "Như Lai thường nói: Tất cả pháp hữu vi, như mộng, huyễn, bọt, bóng...",
+        "fullContent": "Như Lai thường nói: Tất cả pháp hữu vi, như mộng, huyễn, bọt, bóng, như sương mai, như điện chớp, nên quán như vậy. Tu Bồ Đề, ý ông thế nào? Như Lai có pháp nào để nói không?",
+        "readingTime": "20 phút",
+        "difficulty": "Khó",
+        "tags": ["Kim Cang", "Trí tuệ", "Không tướng", "Giải thoát"],
+        "dateAdded": "2024-01-05",
+        "isFavorite": false,
+        "readingCount": 0,
+        "lastRead": null
+      }
+    ],
+    "categories": [
+      {
+        "id": "1",
+        "name": "Tịnh Độ",
+        "description": "Các kinh về cõi Tịnh Độ và Phật A Di Đà",
+        "color": "#FF6B6B"
+      },
+      {
+        "id": "2",
+        "name": "Trí Tuệ",
+        "description": "Các kinh về trí tuệ Bát Nhã và Kim Cang",
+        "color": "#4ECDC4"
+      },
+      {
+        "id": "3",
+        "name": "Giáo lý cơ bản",
+        "description": "Các kinh cơ bản dành cho người mới bắt đầu",
+        "color": "#45B7D1"
+      },
+      {
+        "id": "4",
+        "name": "Đại thừa",
+        "description": "Các kinh của truyền thống Đại thừa",
+        "color": "#96CEB4"
+      }
+    ],
+    "dailyReadings": [
+      {
+        "date": "2024-01-15",
+        "sutraId": "1",
+        "theme": "Ngày đầu tuần - Bắt đầu với tâm thanh tịnh",
+        "note": "Đọc kinh A Di Đà để tâm được an lạc và thanh tịnh"
+      },
+      {
+        "date": "2024-01-16",
+        "sutraId": "2",
+        "theme": "Trí tuệ và từ bi",
+        "note": "Học hỏi trí tuệ Bát Nhã để hiểu rõ bản chất của các pháp"
+      },
+      {
+        "date": "2024-01-17",
+        "sutraId": "3",
+        "theme": "Giáo lý cơ bản",
+        "note": "Đọc kinh Pháp Cú để học hỏi những điều cơ bản nhất"
+      },
+      {
+        "date": "2024-01-18",
+        "sutraId": "4",
+        "theme": "Phật tánh và giác ngộ",
+        "note": "Khám phá Phật tánh trong mỗi chúng sinh"
+      },
+      {
+        "date": "2024-01-19",
+        "sutraId": "5",
+        "theme": "Trí tuệ Kim Cang",
+        "note": "Hiểu về tính không và sự giải thoát"
+      }
+    ]
+  };
+
+  // Tạo thư mục nếu chưa có
+  final assetsDir = Directory('assets/data');
+  if (!assetsDir.existsSync()) {
+    assetsDir.createSync(recursive: true);
+  }
+
+  // Ghi file JSON
+  final jsonString = const JsonEncoder.withIndent('  ').convert(sampleData);
+  final file = File('assets/data/buddhist_sutras.json');
+  file.writeAsStringSync(jsonString, encoding: utf8);
+
+  print('✅ Đã tạo file dữ liệu mẫu: assets/data/buddhist_sutras.json');
+  print('📊 Số lượng kinh: ${sampleData['sutras']!.length}');
+  print('📂 Số danh mục: ${sampleData['categories']!.length}');
+  print('📅 Số bài đọc hàng ngày: ${sampleData['dailyReadings']!.length}');
+}

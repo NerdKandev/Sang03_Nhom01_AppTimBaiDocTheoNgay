@@ -1,0 +1,114 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "email": "admin@example.com",
+      "password": "admin123",
+      "role": "admin",
+      "fullName": "Quản trị viên",
+      "phone": "0123456789",  
+      "avatar": "",
+      "isActive": true,
+      "isLocked": false,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastLogin": "2024-01-15T10:30:00Z",
+      "loginCount": 25,
+      "notes": "Tài khoản quản trị viên chính"
+    },
+    {
+      "id": "2",
+      "username": "user1",
+      "email": "user1@example.com",
+      "password": "user123",
+      "role": "user",
+      "fullName": "Nguyễn Văn A",
+      "phone": "0987654321",
+      "avatar": "",
+      "isActive": true,
+      "isLocked": false,
+      "createdAt": "2024-01-02T08:15:00Z",
+      "lastLogin": "2024-01-14T16:45:00Z",
+      "loginCount": 12,
+      "notes": "Người dùng thường xuyên"
+    },
+    {
+      "id": "3",
+      "username": "user2",
+      "email": "user2@example.com",
+      "password": "user123",
+      "role": "user",
+      "fullName": "Trần Thị B",
+      "phone": "0912345678",
+      "avatar": "",
+      "isActive": true,
+      "isLocked": false,
+      "createdAt": "2024-01-03T14:20:00Z",
+      "lastLogin": "2024-01-13T09:15:00Z",
+      "loginCount": 8,
+      "notes": "Người dùng mới"
+    },
+    {
+      "id": "4",
+      "username": "user3",
+      "email": "user3@example.com",
+      "password": "user123",
+      "role": "user",
+      "fullName": "Lê Văn C",
+      "phone": "0934567890",
+      "avatar": "",
+      "isActive": false,
+      "isLocked": true,
+      "createdAt": "2024-01-04T11:30:00Z",
+      "lastLogin": "2024-01-10T13:20:00Z",
+      "loginCount": 3,
+      "notes": "Tài khoản bị khóa do vi phạm"
+    },
+    {
+      "id": "5",
+      "username": "user4",
+      "email": "user4@example.com",
+      "password": "user123",
+      "role": "user",
+      "fullName": "Phạm Thị D",
+      "phone": "0945678901",
+      "avatar": "",
+      "isActive": true,
+      "isLocked": false,
+      "createdAt": "2024-01-05T16:45:00Z",
+      "lastLogin": "2024-01-12T11:30:00Z",
+      "loginCount": 15,
+      "notes": "Người dùng tích cực"
+    }
+  ],
+  "roles": [
+    {
+      "id": "admin",
+      "name": "Quản trị viên",
+      "description": "Có quyền quản lý toàn bộ hệ thống",
+      "permissions": ["manage_users", "manage_content", "view_analytics", "system_settings"]
+    },
+    {
+      "id": "user",
+      "name": "Người dùng",
+      "description": "Người dùng thông thường",
+      "permissions": ["read_content", "favorite_content", "personal_settings"]
+    },
+    {
+      "id": "guest",
+      "name": "Khách",
+      "description": "Người dùng không đăng ký",
+      "permissions": ["read_content"]
+    }
+  ],
+  "statistics": {
+    "totalUsers": 5,
+    "activeUsers": 4,
+    "lockedUsers": 1,
+    "adminUsers": 1,
+    "regularUsers": 4,
+    "guestUsers": 0,
+    "totalLogins": 63,
+    "averageLoginsPerUser": 12.6
+  }
+}
