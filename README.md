@@ -26,16 +26,18 @@
 
 ## 🚀 Tính năng đã hoàn thành
 
-### ✅ **Backend Logic (Người 1)**
-- [x] **Database Schema** - 8 bảng với relationships
-- [x] **Authentication System** - Đăng ký/đăng nhập/bảo mật
-- [x] **Migration Files** - SQL scripts tự động
-- [x] **Base CRUD Methods** - Cho các team khác
-- [x] **Backup/Restore System** - Sao lưu dữ liệu
-- [x] **Documentation** - Tài liệu đầy đủ
+### ✅ **UI/Theme (Người 2)**
+ HomePage – Danh sách bài Kinh nổi bật / danh mục chính (JSON demo)
+ SearchPage – Tìm theo tên, tác giả, thể loại (lọc trong JSON)
+ ReadPage – Giao diện đọc Kinh, hỗ trợ Dark/Light mode
+ AudioPage / Widget – Nút Phát / Tạm dừng, liên kết bài Kinh
+ Navigation – BottomBar / Drawer giữa Home, Search, Favorites, Settings
+ SettingsPage – Chuyển đổi Dark/Light mode, lưu trạng thái bằng SharedPreferences
+ ThemeProvider – Quản lý chủ đề & lưu trạng thái theme
+ JSON Loader – Đọc dữ liệu từ assets/sutras.json
+ Reusable Widgets – SutraCard, AudioPlayerWidget, SearchBar
 
 ### 🔄 **Đang phát triển**
-- [ ] **UI/Theme (Người 2)** - Giao diện người dùng
 - [ ] **Admin Panel (Người 3)** - Quản lý nội dung
 - [ ] **User Features (Người 4)** - Tính năng cá nhân
 - [ ] **TTS/Schedule (Người 5)** - Đọc tự động & lịch
@@ -87,24 +89,6 @@ flutter pub get
 flutter run
 ```
 
-## 📚 Tài liệu
-
-- **[DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** - Cấu trúc database
-- **[API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)** - API reference
-- **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)** - Hướng dẫn cài đặt
-- **[AUTHENTICATION_GUIDE.md](docs/AUTHENTICATION_GUIDE.md)** - Hướng dẫn authentication
-
-## 🔧 Công nghệ sử dụng
-
-- **Framework:** Flutter 3.0+
-- **Database:** SQLite (sqflite)
-- **Authentication:** SHA-256 hashing
-- **Storage:** SharedPreferences
-- **File System:** path_provider
-- **Testing:** Flutter Test
-
-## 👥 Quy trình làm việc Git
-
 ### **Cấu trúc branch:**
 - `main` - Code ổn định
 - `dev` - Tổng hợp code mới
@@ -148,18 +132,17 @@ git rm --cached <file_name>  # Xóa file khỏi repo
 | Thành viên | Nhiệm vụ | Trạng thái | Tiến độ |
 |------------|----------|------------|---------|
 | **Người 1** | Backend Logic | ✅ Hoàn thành | 100% |
-| **Người 2** | UI/Theme | 🔄 Đang làm | 0% |
+| **Người 2** | UI/Theme |  ✅ Hoàn thành | 100% 
 | **Người 3** | Admin Panel | 🔄 Đang làm | 0% |
 | **Người 4** | User Features | 🔄 Đang làm | 0% |
 | **Người 5** | TTS/Schedule | 🔄 Đang làm | 0% |
 
 ## 🎯 Mục tiêu tiếp theo
 
-1. **Hoàn thiện UI/Theme** - Giao diện người dùng
-2. **Phát triển Admin Panel** - Quản lý nội dung
-3. **Tích hợp User Features** - Tính năng cá nhân
-4. **Implement TTS/Schedule** - Đọc tự động
-5. **Testing & Deployment** - Kiểm thử và triển khai
+1. **Phát triển Admin Panel** - Quản lý nội dung
+2. **Tích hợp User Features** - Tính năng cá nhân
+3. **Implement TTS/Schedule** - Đọc tự động
+4. **Testing & Deployment** - Kiểm thử và triển khai
 
 ## 📞 Liên hệ
 
