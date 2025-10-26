@@ -79,7 +79,8 @@ class DataService {
         sutra.title.toLowerCase().contains(query.toLowerCase()) ||
         sutra.titleVietnamese.toLowerCase().contains(query.toLowerCase()) ||
         sutra.description.toLowerCase().contains(query.toLowerCase()) ||
-        sutra.content.toLowerCase().contains(query.toLowerCase())
+        sutra.content.toLowerCase().contains(query.toLowerCase()) ||
+        sutra.author.toLowerCase().contains(query.toLowerCase())
     ).toList();
   }
 

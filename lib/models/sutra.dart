@@ -3,6 +3,7 @@ class Sutra {
   final String title;
   final String titleVietnamese;
   final String titlePali;
+  final String author;
   final String category;
   final String description;
   final String content;
@@ -28,6 +29,7 @@ class Sutra {
     required this.title,
     required this.titleVietnamese,
     required this.titlePali,
+    this.author = '',
     required this.category,
     required this.description,
     required this.content,
@@ -70,6 +72,7 @@ class Sutra {
       'audioDuration': audioDuration,
       'isAudioEnabled': isAudioEnabled,
       'coverImage': coverImage,
+      'author': author,
     };
   }
 
@@ -80,6 +83,7 @@ class Sutra {
       titleVietnamese: map['titleVietnamese'] ?? '',
       titlePali: map['titlePali'] ?? '',
       category: map['category'] ?? '',
+      author: map['author'] ?? '',
       description: map['description'] ?? '',
       content: map['content'] ?? '',
       fullContent: map['fullContent'] ?? '',
@@ -146,6 +150,7 @@ class Sutra {
     String? audioUrl,
     int? audioDuration,
     bool? isAudioEnabled,
+    String? author,
   }) {
     return Sutra(
       id: id ?? this.id,
@@ -169,6 +174,7 @@ class Sutra {
       audioUrl: audioUrl ?? this.audioUrl,
       audioDuration: audioDuration ?? this.audioDuration,
       isAudioEnabled: isAudioEnabled ?? this.isAudioEnabled,
+      author: author ?? this.author,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/data_service.dart';
+import '../widgets/sutra_card.dart';
 import '../models/sutra.dart';
 import 'sutra_reading_screen.dart';
 import 'admin_user_management_screen.dart';
@@ -365,87 +366,12 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: filteredSutras.length,
       itemBuilder: (context, index) {
         final sutra = filteredSutras[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            title: Text(sutra.titleVietnamese),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(sutra.title),
-                Text('${sutra.category} - ${sutra.difficulty}'),
-                const SizedBox(height: 8),
-                Text(
-                  sutra.description.length > 100 
-                      ? '${sutra.description.substring(0, 100)}...'
-                      : sutra.description,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Chip(
-                        label: Text(sutra.difficulty),
-                        backgroundColor: _getDifficultyColor(sutra.difficulty),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Chip(
-                        label: Text(sutra.readingTime),
-                      ),
-                    ),
-                    if (sutra.isFavorite) ...[
-                      const SizedBox(width: 8),
-                      const Icon(Icons.favorite, color: Colors.red, size: 16),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Favorite button
-                IconButton(
-                  icon: Icon(
-                    sutra.isFavorite 
-                        ? Icons.favorite 
-                        : Icons.favorite_border,
-                    color: sutra.isFavorite 
-                        ? Colors.red 
-                        : Colors.grey,
-                  ),
-                  onPressed: () => _toggleFavorite(sutra.id),
-                  tooltip: sutra.isFavorite 
-                      ? 'Bỏ yêu thích' 
-                      : 'Thêm yêu thích',
-                ),
-                // Mark as read button
-                IconButton(
-                  icon: Icon(
-                    sutra.readingCount > 0 
-                        ? Icons.check_circle 
-                        : Icons.radio_button_unchecked,
-                    color: sutra.readingCount > 0 
-                        ? Colors.green 
-                        : Colors.grey,
-                  ),
-                  onPressed: () => _markAsRead(sutra.id),
-                  tooltip: sutra.readingCount > 0 
-                      ? 'Đã đọc' 
-                      : 'Đánh dấu đã đọc',
-                ),
-                // View detail button
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios),
-                  onPressed: () => _openSutraReading(sutra),
-                  tooltip: 'Đọc kinh',
-                ),
-              ],
-            ),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 0),
+          child: SutraCard(
+            sutra: sutra,
             onTap: () => _openSutraReading(sutra),
+            onToggleFavorite: () => _toggleFavorite(sutra.id),
           ),
         );
       },
