@@ -11,19 +11,21 @@ class Author {
     this.avatarUrl,
   });
 
-  factory Author.fromJson(Map<String, dynamic> json) {
+  factory Author.fromMap(Map<String, dynamic> map) {
     return Author(
-      id: json['id'],
-      name: json['name'],
-      bio: json['bio'],
-      avatarUrl: json['avatarUrl'],
+      id: map['id'] as String,
+      name: map['name'] as String,
+      bio: map['bio'] as String?,
+      avatarUrl: map['avatarUrl'] as String?,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'bio': bio,
-        'avatarUrl': avatarUrl,
-      };
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'bio': bio,
+      'avatarUrl': avatarUrl,
+    };
+  }
 }

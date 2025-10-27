@@ -9,17 +9,19 @@ class Category {
     this.parentId,
   });
 
-  factory Category.fromJson(Map<String, dynamic> json) {
+  factory Category.fromMap(Map<String, dynamic> map) {
     return Category(
-      id: json['id'],
-      name: json['name'],
-      parentId: json['parentId'],
+      id: map['id'] as String,
+      name: map['name'] as String,
+      parentId: map['parentId'] as String?,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'parentId': parentId,
-      };
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'parentId': parentId,
+    };
+  }
 }
