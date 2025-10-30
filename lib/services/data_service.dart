@@ -66,6 +66,11 @@ class DataService {
     return _sutras.where((sutra) => sutra.category == category).toList();
   }
 
+  // Get favorite sutras
+  List<Sutra> getFavoriteSutras() {
+    return _sutras.where((sutra) => sutra.isFavorite).toList();
+  }
+
   // Search sutras
   List<Sutra> searchSutras(String query) {
     if (query.isEmpty) return _sutras;
@@ -74,7 +79,8 @@ class DataService {
         sutra.title.toLowerCase().contains(query.toLowerCase()) ||
         sutra.titleVietnamese.toLowerCase().contains(query.toLowerCase()) ||
         sutra.description.toLowerCase().contains(query.toLowerCase()) ||
-        sutra.content.toLowerCase().contains(query.toLowerCase())
+        sutra.content.toLowerCase().contains(query.toLowerCase()) ||
+        sutra.author.toLowerCase().contains(query.toLowerCase())
     ).toList();
   }
 

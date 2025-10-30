@@ -119,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Đăng Ký'),
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -138,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Welcome Section
                 Card(
                   elevation: 4,
-                  color: const Color(0xFFE3F2FD),
+                  color: const Color(0xFF2196F3),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
@@ -305,22 +305,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: const Color(0xFF2196F3),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
+                    border: Border.all(color: const Color(0xFF2196F3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                          Icon(Icons.info_outline, color: const Color(0xFF2196F3), size: 20),
                           const SizedBox(width: 8),
                           Text(
                             'Hướng dẫn đăng ký:',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue[700],
+                              color: const Color(0xFF2196F3),
                             ),
                           ),
                         ],

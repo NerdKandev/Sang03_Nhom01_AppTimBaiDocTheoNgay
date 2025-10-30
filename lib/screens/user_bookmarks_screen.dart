@@ -85,7 +85,7 @@ class _UserBookmarksScreenState extends State<UserBookmarksScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       elevation: 2,
                       child: ListTile(
-                        leading: const Icon(Icons.bookmark, color: Colors.blue),
+                        leading: const Icon(Icons.bookmark, color: Color(0xFF2196F3)),
                         title: Text(bookmark['title'] ?? 'Không có tiêu đề'),
                         subtitle: Text(
                           '${bookmark['book_name']} Chương ${bookmark['chapter']} Câu ${bookmark['verse']}\n'

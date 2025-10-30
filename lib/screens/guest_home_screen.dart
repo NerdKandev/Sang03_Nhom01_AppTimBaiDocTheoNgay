@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/data_service.dart';
 import '../models/sutra.dart';
 import 'sutra_reading_screen.dart';
+import '../widgets/sutra_card.dart';
 
 class GuestHomeScreen extends StatefulWidget {
   const GuestHomeScreen({super.key});
@@ -20,8 +21,8 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('App Tìm Bài Đọc - Khách'),
-        backgroundColor: const Color(0xFF2196F3),
+        title: const Text('📿Đọc Kinh Hàng Ngày Đọc Kinh Hàng Ngày - Khách'),
+  backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -42,7 +43,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         items: const [
@@ -92,7 +93,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
           Card(
             margin: const EdgeInsets.only(bottom: 24),
             elevation: 4,
-            color: const Color(0xFFE3F2FD),
+            color: const Color(0xFF2196F3),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -138,7 +139,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                   'Tổng số kinh',
                   _dataService.sutras.length.toString(),
                   Icons.library_books,
-                  Colors.blue,
+                  const Color(0xFF2196F3),
                 ),
               ),
               const SizedBox(width: 12),
@@ -200,7 +201,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                 icon: Icons.menu_book,
                 title: 'Đọc kinh',
                 subtitle: 'Khám phá các kinh Phật',
-                color: Colors.blue,
+                color: const Color(0xFF2196F3),
                 onTap: () {
                   setState(() {
                     _currentIndex = 1; // Navigate to Readings tab
@@ -229,7 +230,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -267,7 +268,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
   }) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -391,46 +392,18 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
       itemCount: filteredSutras.length,
       itemBuilder: (context, index) {
         final sutra = filteredSutras[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            title: Text(sutra.titleVietnamese),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(sutra.title),
-                Text('${sutra.category} - ${sutra.difficulty}'),
-                const SizedBox(height: 8),
-                Text(
-                  sutra.description.length > 100 
-                      ? '${sutra.description.substring(0, 100)}...'
-                      : sutra.description,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Chip(
-                      label: Text(sutra.difficulty),
-                      backgroundColor: _getDifficultyColor(sutra.difficulty),
-                    ),
-                    const SizedBox(width: 8),
-                    Chip(
-                      label: Text(sutra.readingTime),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.arrow_forward_ios),
-              onPressed: () => _openSutraReading(sutra),
-              tooltip: 'Đọc kinh',
-            ),
-            onTap: () => _openSutraReading(sutra),
-          ),
+        return SutraCard(
+          sutra: sutra,
+          onTap: () => _openSutraReading(sutra),
+          onToggleFavorite: () => _showLoginRequired(),
         );
       },
+    );
+  }
+
+  void _showLoginRequired() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Vui lòng đăng nhập để lưu yêu thích.')),
     );
   }
 
@@ -536,18 +509,5 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
         builder: (context) => SutraReadingScreen(sutra: sutra),
       ),
     );
-  }
-
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
-      case 'Dễ':
-        return Colors.green.withOpacity(0.2);
-      case 'Trung bình':
-        return Colors.orange.withOpacity(0.2);
-      case 'Khó':
-        return Colors.red.withOpacity(0.2);
-      default:
-        return Colors.grey.withOpacity(0.2);
-    }
   }
 }

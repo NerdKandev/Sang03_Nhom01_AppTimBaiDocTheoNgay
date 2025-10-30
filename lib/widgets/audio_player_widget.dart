@@ -263,7 +263,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                       : Icons.play_circle_filled,
                   label: _isPlaying && !_isPaused ? 'Tạm dừng' : 'Phát',
                   onPressed: _isPlaying && !_isPaused ? _pauseAudio : _playAudio,
-                  color: Colors.blue,
+                  color: const Color(0xFF2196F3),
                   size: 48,
                 ),
 
@@ -319,20 +319,20 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: const Color(0xFF2196F3).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  const Icon(Icons.info_outline, color: Color(0xFF2196F3), size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Đọc trực tiếp từ nội dung text bằng TTS',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.blue[700],
+                        color: const Color(0xFF2196F3),
                       ),
                     ),
                   ),
@@ -408,7 +408,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: const Color(0xFF2196F3).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

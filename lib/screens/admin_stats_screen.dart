@@ -68,7 +68,7 @@ class _AdminStatsScreenState extends State<AdminStatsScreen> {
                     'Tổng Số Người Dùng',
                     _stats['total_users']?.toString() ?? 'N/A',
                     Icons.people,
-                    Colors.blue,
+                    const Color(0xFF2196F3),
                   ),
                   _buildStatCard(
                     context,

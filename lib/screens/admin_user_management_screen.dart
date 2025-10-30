@@ -26,7 +26,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quản lý người dùng'),
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -72,6 +72,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedFilter,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Lọc theo',
                           border: OutlineInputBorder(),
@@ -98,6 +99,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedSort,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Sắp xếp',
                           border: OutlineInputBorder(),
@@ -133,7 +135,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     'Tổng người dùng',
                     _userService.users.length.toString(),
                     Icons.people,
-                    Colors.blue,
+                    const Color(0xFF2196F3),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -166,7 +168,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddUserDialog,
-        backgroundColor: const Color(0xFF2196F3),
+  backgroundColor: const Color(0xFF2196F3),
         child: const Icon(Icons.person_add, color: Colors.white),
         tooltip: 'Thêm người dùng',
       ),
@@ -403,7 +405,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
       case 'admin':
         return Colors.red;
       case 'user':
-        return Colors.blue;
+  return const Color(0xFF2196F3);
       case 'guest':
         return Colors.grey;
       default:
