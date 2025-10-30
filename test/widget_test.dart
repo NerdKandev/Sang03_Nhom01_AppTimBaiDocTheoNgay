@@ -9,7 +9,7 @@ import 'package:sang03_nhom01_apptimbaidoctheongay/main.dart';
 void main() {
   testWidgets('Bible App smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const BuddhismApp());
 
     // Verify that our app title is displayed (check for at least one)
     expect(find.text('App Tìm Bài Đọc Theo Ngày'), findsWidgets);
