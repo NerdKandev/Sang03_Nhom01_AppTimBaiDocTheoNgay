@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/data_service.dart';
 import '../models/sutra.dart';
+import '../widgets/sutra_card.dart';
+import 'sutra_reading_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -18,24 +20,32 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kinh Yêu Thích'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('❤️ Bài Yêu Thích'),
+        backgroundColor: const Color(0xFF2196F3),
+        foregroundColor: const Color.fromARGB(255, 255, 252, 221),
       ),
       body: favoriteSutras.isEmpty
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.favorite_border, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
+                  Icon(Icons.favorite_border, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
                   Text(
-                    'Chưa có kinh yêu thích nào',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    'Chưa có bài yêu thích nào',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'Hãy đánh dấu yêu thích các kinh bạn thích!',
-                    style: TextStyle(color: Colors.grey),
+                    'Hãy đánh dấu yêu thích các bài bạn thích!',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -45,41 +55,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               itemCount: favoriteSutras.length,
               itemBuilder: (context, index) {
                 final sutra = favoriteSutras[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    title: Text(sutra.title),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(sutra.titleVietnamese),
-                        Text(sutra.description),
-                        Row(
-                          children: [
-                            Chip(
-                              label: Text(sutra.difficulty),
-                              backgroundColor: _getDifficultyColor(sutra.difficulty),
-                            ),
-                            const SizedBox(width: 8),
-                            Chip(
-                              label: Text(sutra.readingTime),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.favorite, color: Colors.red, size: 16),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.favorite, color: Colors.red),
-                      onPressed: () {
-                        _dataService.toggleFavorite(sutra.id);
-                        setState(() {});
-                      },
-                    ),
-                    onTap: () {
-                      _showSutraDetail(sutra);
-                    },
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SutraCard(
+                    sutra: sutra,
+                    onTap: () => _openSutraReading(sutra),
+                    onToggleFavorite: () => _toggleFavorite(sutra.id),
                   ),
                 );
               },
@@ -87,54 +68,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
-      case 'Dễ':
-        return Colors.green.withOpacity(0.2);
-      case 'Trung bình':
-        return Colors.orange.withOpacity(0.2);
-      case 'Khó':
-        return Colors.red.withOpacity(0.2);
-      default:
-        return Colors.grey.withOpacity(0.2);
-    }
+  void _openSutraReading(Sutra sutra) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SutraReadingScreen(sutra: sutra),
+      ),
+    ).then((_) {
+      // Refresh favorites list when returning from reading screen
+      setState(() {});
+    });
   }
 
-  void _showSutraDetail(Sutra sutra) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(sutra.title),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Tiếng Việt: ${sutra.titleVietnamese}'),
-              Text('Pali: ${sutra.titlePali}'),
-              const SizedBox(height: 16),
-              Text('Mô tả: ${sutra.description}'),
-              const SizedBox(height: 16),
-              Text('Nội dung:', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Text(sutra.fullContent),
-            ],
-          ),
+  void _toggleFavorite(String sutraId) async {
+    await _dataService.toggleFavorite(sutraId);
+    if (mounted) {
+      setState(() {});
+      final isStillFavorite = _dataService.sutras
+          .firstWhere((s) => s.id == sutraId)
+          .isFavorite;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isStillFavorite
+              ? 'Đã thêm vào yêu thích'
+              : 'Đã bỏ yêu thích'),
+          duration: const Duration(seconds: 1),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _dataService.updateReadingCount(sutra.id);
-              setState(() {});
-              Navigator.of(context).pop();
-            },
-            child: const Text('Đánh dấu đã đọc'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Đóng'),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 }

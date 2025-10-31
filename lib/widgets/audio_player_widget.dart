@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../services/audio_service.dart';
 import '../models/sutra.dart';
 
@@ -7,6 +8,7 @@ class AudioPlayerWidget extends StatefulWidget {
   final VoidCallback? onPlayStart;
   final VoidCallback? onPlayComplete;
   final VoidCallback? onPlayError;
+  final bool? useAudioFile; // Override for audio mode selection
 
   const AudioPlayerWidget({
     super.key,
@@ -14,6 +16,7 @@ class AudioPlayerWidget extends StatefulWidget {
     this.onPlayStart,
     this.onPlayComplete,
     this.onPlayError,
+    this.useAudioFile,
   });
 
   @override
@@ -22,17 +25,71 @@ class AudioPlayerWidget extends StatefulWidget {
 
 class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   final AudioService _audioService = AudioService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isInitialized = false;
   bool _isPlaying = false;
   bool _isPaused = false;
   double _currentSpeechRate = 0.5;
   double _currentVolume = 1.0;
   double _currentPitch = 1.0;
+  Duration _audioDuration = Duration.zero;
+  Duration _audioPosition = Duration.zero;
+  bool _isLoadingAudio = false;
+  bool _useAudioFile = true; // Toggle between audio file and TTS
+  bool _isSeeking = false; // Track if user is dragging slider
 
   @override
   void initState() {
     super.initState();
+    // Use provided value or default based on sutra
+    _useAudioFile = widget.useAudioFile ?? 
+        (widget.sutra.hasAudio && widget.sutra.audioPath != null);
     _initializeAudio();
+    _setupAudioPlayerListeners();
+  }
+  
+  @override
+  void didUpdateWidget(AudioPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update if external selection changes
+    if (widget.useAudioFile != null && widget.useAudioFile != oldWidget.useAudioFile) {
+      _stopAudio();
+      setState(() {
+        _useAudioFile = widget.useAudioFile!;
+      });
+    }
+  }
+
+
+  void _setupAudioPlayerListeners() {
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      setState(() {
+        _isPlaying = state == PlayerState.playing;
+        _isPaused = state == PlayerState.paused;
+      });
+    });
+
+    _audioPlayer.onDurationChanged.listen((duration) {
+      setState(() {
+        _audioDuration = duration;
+      });
+    });
+
+    _audioPlayer.onPositionChanged.listen((position) {
+      if (!_isSeeking) {
+        setState(() {
+          _audioPosition = position;
+        });
+      }
+    });
+
+    _audioPlayer.onPlayerComplete.listen((_) {
+      setState(() {
+        _isPlaying = false;
+        _isPaused = false;
+      });
+      widget.onPlayComplete?.call();
+    });
   }
 
   Future<void> _initializeAudio() async {
@@ -96,48 +153,173 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     }
   }
 
-  void _showErrorSnackBar(String message) {
+  void _showErrorSnackBar(String message, {bool isWarning = false}) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
+          backgroundColor: isWarning ? Colors.orange : Colors.red,
+          duration: const Duration(seconds: 4),
         ),
       );
     }
   }
 
-  Future<void> _playAudio() async {
-    if (!_isInitialized) return;
-
+  Future<void> _playTTS() async {
     try {
-      if (widget.sutra.hasAudio && widget.sutra.audioPath != null) {
-        // Play pre-recorded audio file
-        // TODO: Implement audio file playback
-        await _audioService.speak(widget.sutra.fullContent);
+      // Stop any currently playing audio first
+      await _stopAudio();
+      
+      // Ensure TTS is initialized
+      if (!_isInitialized) {
+        await _initializeAudio();
+        // Check again after initialization
+        if (!_isInitialized) {
+          _showErrorSnackBar('Không thể khởi tạo TTS. Vui lòng kiểm tra cài đặt TTS trên thiết bị.');
+          widget.onPlayError?.call();
+          return;
+        }
+      }
+      
+      // Check if TTS is available
+      bool isAvailable = await _audioService.isTTSAvailable();
+      if (!isAvailable) {
+        _showErrorSnackBar('TTS không khả dụng trên thiết bị này. Vui lòng cài đặt TTS engine.');
+        widget.onPlayError?.call();
+        return;
+      }
+      
+      // Get content - use fullContent if available
+      String content = widget.sutra.fullContent.isNotEmpty 
+          ? widget.sutra.fullContent 
+          : widget.sutra.content;
+      
+      if (content.isEmpty) {
+        _showErrorSnackBar('Bài đọc này không có nội dung để đọc.');
+        return;
+      }
+      
+      await _audioService.speak(content);
+    } catch (e) {
+      print('Error in _playTTS: $e');
+      _showErrorSnackBar('Không thể phát TTS: $e');
+      widget.onPlayError?.call();
+    }
+  }
+  
+  Future<void> _playAudioFile() async {
+    try {
+      // Stop any currently playing audio first
+      await _stopAudio();
+      
+      if (!widget.sutra.hasAudio || widget.sutra.audioPath == null) {
+        _showErrorSnackBar('Bài đọc này không có file audio. Đang chuyển sang TTS...', isWarning: true);
+        // Automatically switch to TTS
+        setState(() {
+          _useAudioFile = false;
+        });
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _playTTS();
+        return;
+      }
+      
+      setState(() {
+        _isLoadingAudio = true;
+      });
+
+      // Extract filename from assets/audio/filename.mp3
+      String audioAssetPath = widget.sutra.audioPath!;
+      if (audioAssetPath.startsWith('assets/audio/')) {
+        // Remove 'assets/' prefix for AssetSource
+        audioAssetPath = audioAssetPath.replaceFirst('assets/', '');
+        await _audioPlayer.play(AssetSource(audioAssetPath));
+        
+        // Reset position when starting new playback
+        setState(() {
+          _isLoadingAudio = false;
+          _isPlaying = true;
+          _audioPosition = Duration.zero;
+          _isSeeking = false;
+        });
+        
+        widget.onPlayStart?.call();
       } else {
-        // Use TTS
-        await _audioService.speak(widget.sutra.fullContent);
+        throw Exception('Đường dẫn audio không hợp lệ');
       }
     } catch (e) {
-      _showErrorSnackBar('Không thể phát âm thanh: $e');
+      setState(() {
+        _isLoadingAudio = false;
+      });
+      
+      // Check if error is about missing asset
+      String errorMessage = e.toString();
+      if (errorMessage.contains('Unable to load asset') || 
+          errorMessage.contains('does not exist') ||
+          errorMessage.contains('empty data')) {
+        // Automatically fallback to TTS
+        _showErrorSnackBar('File audio không tìm thấy. Đang chuyển sang TTS...', isWarning: true);
+        setState(() {
+          _useAudioFile = false;
+        });
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _playTTS();
+      } else {
+        _showErrorSnackBar('Không thể phát file audio: $e');
+        widget.onPlayError?.call();
+      }
     }
   }
 
   Future<void> _pauseAudio() async {
-    if (!_isInitialized) return;
-    await _audioService.pause();
+    // Stop both audio player and TTS to be safe
+    try {
+      if (widget.sutra.hasAudio && widget.sutra.audioPath != null) {
+        await _audioPlayer.pause();
+      }
+    } catch (e) {
+      print('Error pausing audio player: $e');
+    }
+    
+    try {
+      if (_isInitialized) {
+        await _audioService.pause();
+      }
+    } catch (e) {
+      print('Error pausing TTS: $e');
+    }
   }
 
   Future<void> _resumeAudio() async {
-    if (!_isInitialized) return;
-    await _audioService.resume();
+    if (_isPlaying && _useAudioFile && widget.sutra.hasAudio && widget.sutra.audioPath != null) {
+      await _audioPlayer.resume();
+    } else if (_isInitialized) {
+      await _audioService.resume();
+    }
   }
 
   Future<void> _stopAudio() async {
-    if (!_isInitialized) return;
-    await _audioService.stop();
+    // Stop both audio player and TTS to ensure clean state
+    try {
+      await _audioPlayer.stop();
+    } catch (e) {
+      print('Error stopping audio player: $e');
+    }
+    
+    try {
+      if (_isInitialized) {
+        await _audioService.stop();
+      }
+    } catch (e) {
+      print('Error stopping TTS: $e');
+    }
+    
+    setState(() {
+      _isPlaying = false;
+      _isPaused = false;
+      _audioPosition = Duration.zero;
+      _audioDuration = Duration.zero;
+      _isSeeking = false;
+    });
   }
 
   Future<void> _playSlowly() async {
@@ -188,6 +370,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _audioService.dispose();
     super.dispose();
   }
@@ -252,20 +435,63 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             ),
             const SizedBox(height: 16),
 
+            // Show current mode if externally controlled
+            if (widget.useAudioFile != null && widget.sutra.hasAudio && widget.sutra.audioPath != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: _useAudioFile ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _useAudioFile ? Colors.green.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _useAudioFile ? Icons.library_music : Icons.volume_up,
+                      color: _useAudioFile ? Colors.green : const Color(0xFF2196F3),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _useAudioFile ? 'Đang dùng: Audio File' : 'Đang dùng: TTS',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: _useAudioFile ? Colors.green[700] : const Color(0xFF2196F3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Main controls
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 // Play/Pause button
-                _buildControlButton(
-                  icon: _isPlaying && !_isPaused 
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_filled,
-                  label: _isPlaying && !_isPaused ? 'Tạm dừng' : 'Phát',
-                  onPressed: _isPlaying && !_isPaused ? _pauseAudio : _playAudio,
-                  color: const Color(0xFF2196F3),
-                  size: 48,
-                ),
+                _isLoadingAudio
+                    ? const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
+                      )
+                    : _buildControlButton(
+                        icon: _isPlaying && !_isPaused 
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_filled,
+                        label: _isPlaying && !_isPaused ? 'Tạm dừng' : 'Phát',
+                        onPressed: _isPlaying && !_isPaused 
+                            ? _pauseAudio 
+                            : ((_useAudioFile && widget.sutra.hasAudio && widget.sutra.audioPath != null)
+                                ? _playAudioFile
+                                : _playTTS),
+                        color: const Color(0xFF2196F3),
+                        size: 48,
+                      ),
 
                 // Stop button
                 _buildControlButton(
@@ -293,65 +519,157 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Slow play button
-                _buildControlButton(
-                  icon: Icons.slow_motion_video,
-                  label: 'Đọc chậm',
-                  onPressed: _playSlowly,
-                  color: Colors.orange,
-                  size: 36,
-                ),
+                // Slow play button (only for TTS)
+                if ((!widget.sutra.hasAudio || widget.sutra.audioPath == null) || !_useAudioFile)
+                  _buildControlButton(
+                    icon: Icons.slow_motion_video,
+                    label: 'Đọc chậm',
+                    onPressed: _playSlowly,
+                    color: Colors.orange,
+                    size: 36,
+                  ),
 
-                // Sentence by sentence button
-                _buildControlButton(
-                  icon: Icons.format_list_numbered,
-                  label: 'Từng câu',
-                  onPressed: _playBySentences,
-                  color: Colors.purple,
-                  size: 36,
-                ),
+                // Sentence by sentence button (only for TTS)
+                if ((!widget.sutra.hasAudio || widget.sutra.audioPath == null) || !_useAudioFile)
+                  _buildControlButton(
+                    icon: Icons.format_list_numbered,
+                    label: 'Từng câu',
+                    onPressed: _playBySentences,
+                    color: Colors.purple,
+                    size: 36,
+                  ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // TTS Status
-            Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2196F3).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: Color(0xFF2196F3), size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Đọc trực tiếp từ nội dung text bằng TTS',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: const Color(0xFF2196F3),
+            // Audio file or TTS Status
+            if (widget.sutra.hasAudio && widget.sutra.audioPath != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.audiotrack, color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Phát từ file audio',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          if (_audioDuration != Duration.zero || _audioPosition != Duration.zero) ...[
+                            const SizedBox(height: 12),
+                            // Time display: current / total
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _formatDuration(_audioPosition),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  _formatDuration(_audioDuration != Duration.zero ? _audioDuration : Duration.zero),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Seekable slider
+                            if (_audioDuration != Duration.zero && _audioDuration.inMilliseconds > 0)
+                              Slider(
+                                value: _audioPosition.inMilliseconds.clamp(0, _audioDuration.inMilliseconds).toDouble(),
+                                min: 0,
+                                max: _audioDuration.inMilliseconds.toDouble(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isSeeking = true;
+                                    _audioPosition = Duration(milliseconds: value.toInt());
+                                  });
+                                },
+                                onChangeEnd: (value) async {
+                                  final seekPosition = Duration(milliseconds: value.toInt());
+                                  try {
+                                    await _audioPlayer.seek(seekPosition);
+                                    setState(() {
+                                      _isSeeking = false;
+                                      _audioPosition = seekPosition;
+                                    });
+                                  } catch (e) {
+                                    setState(() {
+                                      _isSeeking = false;
+                                    });
+                                    print('Error seeking audio: $e');
+                                  }
+                                },
+                                activeColor: Colors.green,
+                                inactiveColor: Colors.grey[400],
+                              ),
+                          ],
+                        ],
                       ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: _checkTTSStatus,
-                    child: const Text('Kiểm tra', style: TextStyle(fontSize: 12)),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              // TTS Status
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Color(0xFF2196F3), size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Đọc trực tiếp từ nội dung text bằng TTS',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: const Color(0xFF2196F3),
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _checkTTSStatus,
+                      child: const Text('Kiểm tra', style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
-            // Settings section
-            ExpansionTile(
-              title: const Text(
-                'Cài đặt đọc',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              leading: const Icon(Icons.settings),
-              children: [
+            // Settings section (only for TTS)
+            if (!widget.sutra.hasAudio || widget.sutra.audioPath == null)
+              ExpansionTile(
+                title: const Text(
+                  'Cài đặt đọc',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                leading: const Icon(Icons.settings),
+                children: [
                 // Speech rate slider
                 _buildSliderControl(
                   title: 'Tốc độ đọc',
@@ -427,6 +745,19 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         ),
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    
+    if (hours > 0) {
+      return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}';
+    } else {
+      return '${twoDigits(minutes)}:${twoDigits(seconds)}';
+    }
   }
 
   Widget _buildControlButton({

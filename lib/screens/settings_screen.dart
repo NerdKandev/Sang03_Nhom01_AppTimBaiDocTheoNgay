@@ -88,15 +88,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Cài đặt', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text('Quản lý tuỳ chọn ứng dụng của bạn', style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 16),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Cài đặt'),
+        backgroundColor: const Color(0xFF2196F3),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Quay lại',
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Quản lý tuỳ chọn ứng dụng của bạn', style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 16),
 
           // Dark mode card
           _buildCard(
@@ -114,28 +123,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Switch(
                   value: _isDark,
                   onChanged: _setDark,
-                ),
-              ],
-            ),
-          ),
-
-          // Language card
-          _buildCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Ngôn ngữ', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _language,
-                  items: const [
-                    DropdownMenuItem(value: 'Tiếng Việt', child: Text('Tiếng Việt')),
-                    DropdownMenuItem(value: 'English', child: Text('English')),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) _setLanguage(v);
-                  },
-                  decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14)),
                 ),
               ],
             ),
@@ -193,11 +180,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-          Text('Lưu ý: Thay thế ảnh minh họa bằng ảnh thực tế trong thư mục assets/images', style: theme.textTheme.bodySmall),
-          const SizedBox(height: 40),
-        ],
+          ],
+        ),
       ),
     );
   }

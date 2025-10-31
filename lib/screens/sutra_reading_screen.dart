@@ -21,9 +21,277 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
   Color _backgroundColor = Colors.white;
   Color _textColor = Colors.black;
   final DataService _dataService = DataService();
+  
+  // Pagination
+  final PageController _pageController = PageController();
+  List<String> _contentPages = [];
+  int _currentPage = 0;
+  bool _needsPagination = false;
+  
+  // Audio mode selection
+  bool? _selectedAudioMode; // null = chưa chọn, true = Audio File, false = TTS
+  
+  @override
+  void initState() {
+    super.initState();
+    // Default to Audio File if sutra has audio
+    if (widget.sutra.hasAudio && widget.sutra.audioPath != null) {
+      _selectedAudioMode = true;
+    }
+    // Will be called in build method after first frame
+  }
+  
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+  
+  Widget _buildAudioModeSelector() {
+    // Default to Audio File if not selected yet
+    final selectedMode = _selectedAudioMode ?? true;
+    
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF2196F3).withOpacity(0.1),
+              const Color(0xFF2196F3).withOpacity(0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.audiotrack,
+                  color: const Color(0xFF2196F3),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Chọn chế độ nghe',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2196F3),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                // Audio File Option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedAudioMode = true;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: selectedMode 
+                            ? const Color(0xFF2196F3) 
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selectedMode 
+                              ? const Color(0xFF2196F3) 
+                              : Colors.grey[300]!,
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.library_music,
+                            size: 32,
+                            color: selectedMode ? Colors.white : Colors.grey[600],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Audio File',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: selectedMode ? Colors.white : Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Nghe từ file',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: selectedMode ? Colors.white70 : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // TTS Option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedAudioMode = false;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: !selectedMode 
+                            ? const Color(0xFF2196F3) 
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: !selectedMode 
+                              ? const Color(0xFF2196F3) 
+                              : Colors.grey[300]!,
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.volume_up,
+                            size: 32,
+                            color: !selectedMode ? Colors.white : Colors.grey[600],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'TTS',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: !selectedMode ? Colors.white : Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Đọc tự động',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: !selectedMode ? Colors.white70 : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  void _splitContentIntoPages() {
+    final fullContent = widget.sutra.fullContent;
+    if (fullContent.isEmpty) {
+      _contentPages = [''];
+      _needsPagination = false;
+      return;
+    }
+    
+    // Estimate characters per page based on font size, line height, and screen size
+    // Formula: approximate chars per line * lines per page
+    // Average Vietnamese character width ≈ fontSize * 0.6
+    // Screen width (assuming padding) ≈ 350dp
+    final screenWidth = MediaQuery.of(context).size.width - 80; // Account for padding
+    final charsPerLine = (screenWidth / (_fontSize * 0.6)).round();
+    final linesPerPage = ((MediaQuery.of(context).size.height * 0.5) / (_fontSize * _lineHeight)).round();
+    final charsPerPage = (charsPerLine * linesPerPage * 0.9).round(); // 90% to account for margins
+    
+    // Minimum chars per page to avoid too many pages
+    final minCharsPerPage = (_fontSize * 40).round();
+    final actualCharsPerPage = charsPerPage > minCharsPerPage ? charsPerPage : minCharsPerPage;
+    
+    // Split content into pages
+    _contentPages = [];
+    int startIndex = 0;
+    
+    while (startIndex < fullContent.length) {
+      int endIndex = startIndex + actualCharsPerPage;
+      
+      if (endIndex >= fullContent.length) {
+        // Last page
+        _contentPages.add(fullContent.substring(startIndex).trim());
+        break;
+      }
+      
+      // Try to break at sentence boundary (period, exclamation, question mark)
+      int lastPeriod = fullContent.lastIndexOf('.', endIndex);
+      int lastExclamation = fullContent.lastIndexOf('!', endIndex);
+      int lastQuestion = fullContent.lastIndexOf('?', endIndex);
+      int lastBreak = [lastPeriod, lastExclamation, lastQuestion].reduce((a, b) => a > b ? a : b);
+      
+      // If found a sentence break within reasonable distance, use it
+      if (lastBreak > startIndex + actualCharsPerPage * 0.7) {
+        endIndex = lastBreak + 1;
+      } else {
+        // Try to break at paragraph or line break
+        int lastNewline = fullContent.lastIndexOf('\n', endIndex);
+        if (lastNewline > startIndex + actualCharsPerPage * 0.7) {
+          endIndex = lastNewline + 1;
+        } else {
+          // Try to break at space
+          int lastSpace = fullContent.lastIndexOf(' ', endIndex);
+          if (lastSpace > startIndex + actualCharsPerPage * 0.8) {
+            endIndex = lastSpace + 1;
+          }
+        }
+      }
+      
+      _contentPages.add(fullContent.substring(startIndex, endIndex).trim());
+      startIndex = endIndex;
+    }
+    
+    _needsPagination = _contentPages.length > 1;
+    if (_contentPages.isEmpty) {
+      _contentPages = [fullContent];
+      _needsPagination = false;
+    }
+  }
+  
+  void _updatePagination() {
+    _splitContentIntoPages();
+    setState(() {
+      _currentPage = 0;
+      _pageController.jumpToPage(0);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Initialize pagination on first build
+    if (_contentPages.isEmpty && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _splitContentIntoPages();
+          });
+        }
+      });
+    }
+    
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
@@ -60,57 +328,6 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Sutra Info Card
-              Card(
-                elevation: 4,
-                color: const Color(0xFF2196F3),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.sutra.title,
-                        style: TextStyle(
-                          fontSize: _fontSize + 2,
-                          fontWeight: FontWeight.bold,
-                          color: _textColor,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.sutra.titlePali,
-                        style: TextStyle(
-                          fontSize: _fontSize - 2,
-                          fontStyle: FontStyle.italic,
-                          color: _textColor.withOpacity(0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _buildInfoChip(
-                            widget.sutra.category,
-                            const Color(0xFF2196F3),
-                          ),
-                          const SizedBox(width: 8),
-                          _buildInfoChip(
-                            widget.sutra.difficulty,
-                            _getDifficultyColor(widget.sutra.difficulty),
-                          ),
-                          const SizedBox(width: 8),
-                          _buildInfoChip(
-                            widget.sutra.readingTime,
-                            Colors.green,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 24),
               // Cover image (use asset if available; errorBuilder gives a graceful fallback)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -134,9 +351,17 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              
+              // Audio Mode Selection (only if sutra has audio)
+              if (widget.sutra.hasAudio && widget.sutra.audioPath != null) ...[
+                _buildAudioModeSelector(),
+                const SizedBox(height: 16),
+              ],
+              
               // Audio Player Widget
               AudioPlayerWidget(
                 sutra: widget.sutra,
+                useAudioFile: _selectedAudioMode,
                 onPlayStart: () {
                   // Update reading count when audio starts
                   _dataService.updateReadingCount(widget.sutra.id);
@@ -188,39 +413,168 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
               ],
               
               // Content
-              Text(
-                'Nội dung:',
-                style: TextStyle(
-                  fontSize: _fontSize + 4,
-                  fontWeight: FontWeight.bold,
-                  color: _textColor,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Nội dung:',
+                    style: TextStyle(
+                      fontSize: _fontSize + 4,
+                      fontWeight: FontWeight.bold,
+                      color: _textColor,
+                    ),
+                  ),
+                  if (_needsPagination)
+                    Text(
+                      'Trang ${_currentPage + 1}/${_contentPages.length}',
+                      style: TextStyle(
+                        fontSize: _fontSize - 2,
+                        color: _textColor.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
               
-              // Main Content
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20.0),
-                decoration: BoxDecoration(
-                  color: _backgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _textColor.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  widget.sutra.fullContent,
-                  style: TextStyle(
-                    fontSize: _fontSize,
-                    height: _lineHeight,
-                    color: _textColor,
-                    letterSpacing: 0.5,
-                  ),
-                  textAlign: TextAlign.justify,
-                ),
+              // Main Content with Pagination
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: _needsPagination
+                    ? PageView.builder(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                        },
+                        itemCount: _contentPages.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20.0),
+                            margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                            decoration: BoxDecoration(
+                              color: _backgroundColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _textColor.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                _contentPages[index],
+                                style: TextStyle(
+                                  fontSize: _fontSize,
+                                  height: _lineHeight,
+                                  color: _textColor,
+                                  letterSpacing: 0.5,
+                                ),
+                                textAlign: TextAlign.justify,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                          color: _backgroundColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _textColor.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            widget.sutra.fullContent,
+                            style: TextStyle(
+                              fontSize: _fontSize,
+                              height: _lineHeight,
+                              color: _textColor,
+                              letterSpacing: 0.5,
+                            ),
+                            textAlign: TextAlign.justify,
+                          ),
+                        ),
+                      ),
               ),
+              
+              // Page Navigation Controls
+              if (_needsPagination) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: _currentPage > 0
+                          ? () {
+                              _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          : null,
+                      tooltip: 'Trang trước',
+                    ),
+                    const SizedBox(width: 16),
+                    Wrap(
+                      spacing: 8,
+                      children: List.generate(
+                        _contentPages.length,
+                        (index) => GestureDetector(
+                          onTap: () {
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: _currentPage == index
+                                  ? const Color(0xFF2196F3)
+                                  : Colors.grey[300],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: _currentPage == index
+                                      ? Colors.white
+                                      : Colors.black87,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: _currentPage < _contentPages.length - 1
+                          ? () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          : null,
+                      tooltip: 'Trang sau',
+                    ),
+                  ],
+                ),
+              ],
               
               const SizedBox(height: 32),
               
@@ -305,38 +659,6 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
     );
   }
 
-  Widget _buildInfoChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: _fontSize - 2,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
-      case 'Dễ':
-        return Colors.green;
-      case 'Trung bình':
-        return Colors.orange;
-      case 'Khó':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
   void _quickPlay() {
     // Show quick play options
     showModalBottomSheet(
@@ -387,99 +709,118 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
   void _showSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cài đặt đọc'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Font Size
-            Text(
-              'Kích thước chữ: ${_fontSize.toInt()}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Slider(
-              value: _fontSize,
-              min: 14.0,
-              max: 28.0,
-              divisions: 14,
-              label: _fontSize.toInt().toString(),
-              onChanged: (value) {
-                setState(() {
-                  _fontSize = value;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Line Height
-            Text(
-              'Khoảng cách dòng: ${_lineHeight.toStringAsFixed(1)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Slider(
-              value: _lineHeight,
-              min: 1.2,
-              max: 2.0,
-              divisions: 8,
-              label: _lineHeight.toStringAsFixed(1),
-              onChanged: (value) {
-                setState(() {
-                  _lineHeight = value;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Background Color
-            Text(
-              'Màu nền:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildColorOption(Colors.white, 'Trắng'),
-                const SizedBox(width: 8),
-                _buildColorOption(Colors.amber[50]!, 'Vàng nhạt'),
-                const SizedBox(width: 8),
-                _buildColorOption(const Color(0xFF2196F3), 'Xanh nhạt'),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Text Color
-            Text(
-              'Màu chữ:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildTextColorOption(Colors.black, 'Đen'),
-                const SizedBox(width: 8),
-                _buildTextColorOption(Colors.brown, 'Nâu'),
-                const SizedBox(width: 8),
-                _buildTextColorOption(const Color(0xFF2196F3), 'Xanh đậm'),
-              ],
+      builder: (context) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Cài đặt đọc'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Font Size
+              Text(
+                'Kích thước chữ: ${_fontSize.toInt()}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Slider(
+                value: _fontSize,
+                min: 14.0,
+                max: 28.0,
+                divisions: 14,
+                label: _fontSize.toInt().toString(),
+                onChanged: (value) {
+                  // Update dialog state for immediate UI feedback
+                  setDialogState(() {
+                    _fontSize = value;
+                  });
+                  // Update main screen state for real-time changes
+                  setState(() {
+                    _fontSize = value;
+                  });
+                  _updatePagination();
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Line Height
+              Text(
+                'Khoảng cách dòng: ${_lineHeight.toStringAsFixed(1)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Slider(
+                value: _lineHeight,
+                min: 1.2,
+                max: 2.0,
+                divisions: 8,
+                label: _lineHeight.toStringAsFixed(1),
+                onChanged: (value) {
+                  // Update dialog state for immediate UI feedback
+                  setDialogState(() {
+                    _lineHeight = value;
+                  });
+                  // Update main screen state for real-time changes
+                  setState(() {
+                    _lineHeight = value;
+                  });
+                  _updatePagination();
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Background Color
+              Text(
+                'Màu nền:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildColorOptionInDialog(Colors.white, 'Trắng', setDialogState),
+                  const SizedBox(width: 8),
+                  _buildColorOptionInDialog(Colors.amber[50]!, 'Vàng nhạt', setDialogState),
+                  const SizedBox(width: 8),
+                  _buildColorOptionInDialog(const Color(0xFF2196F3), 'Xanh nhạt', setDialogState),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Text Color
+              Text(
+                'Màu chữ:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildTextColorOptionInDialog(Colors.black, 'Đen', setDialogState),
+                  const SizedBox(width: 8),
+                  _buildTextColorOptionInDialog(Colors.brown, 'Nâu', setDialogState),
+                  const SizedBox(width: 8),
+                  _buildTextColorOptionInDialog(const Color(0xFF2196F3), 'Xanh đậm', setDialogState),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Đóng'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Đóng'),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildColorOption(Color color, String label) {
+  Widget _buildColorOptionInDialog(Color color, String label, StateSetter setDialogState) {
     return GestureDetector(
       onTap: () {
+        // Update dialog state for immediate UI feedback
+        setDialogState(() {
+          _backgroundColor = color;
+        });
+        // Update main screen state for real-time changes
         setState(() {
           _backgroundColor = color;
         });
@@ -502,9 +843,14 @@ class _SutraReadingScreenState extends State<SutraReadingScreen> {
     );
   }
 
-  Widget _buildTextColorOption(Color color, String label) {
+  Widget _buildTextColorOptionInDialog(Color color, String label, StateSetter setDialogState) {
     return GestureDetector(
       onTap: () {
+        // Update dialog state for immediate UI feedback
+        setDialogState(() {
+          _textColor = color;
+        });
+        // Update main screen state for real-time changes
         setState(() {
           _textColor = color;
         });

@@ -136,37 +136,124 @@ class AudioService {
         await stop();
       }
 
-      // Thử đọc với retry mechanism
-      bool success = false;
-      int retryCount = 0;
-      const maxRetries = 3;
+      // Clean text: remove excessive whitespace and normalize
+      String cleanedText = _cleanText(text);
+      
+      // Split long text into chunks if needed (TTS has character limits on some platforms)
+      const int maxChunkLength = 4000; // Safe limit for most TTS engines
+      
+      if (cleanedText.length > maxChunkLength) {
+        // Split into chunks and read sequentially
+        List<String> chunks = _splitIntoChunks(cleanedText, maxChunkLength);
+        await _speakChunksSequentially(chunks);
+      } else {
+        // Read normally for shorter text
+        await _speakTextWithRetry(cleanedText);
+      }
+    } catch (e) {
+      print('Error speaking text: $e');
+      onError?.call('Không thể đọc văn bản. Vui lòng kiểm tra cài đặt TTS trên thiết bị.');
+    }
+  }
 
-      while (!success && retryCount < maxRetries) {
-        try {
-          await _flutterTts.speak(text);
-          success = true;
-        } catch (e) {
-          retryCount++;
-          print('TTS Error (attempt $retryCount): $e');
+  String _cleanText(String text) {
+    // Remove excessive newlines and whitespace
+    String cleaned = text.replaceAll(RegExp(r'\n{3,}'), '\n\n'); // Max 2 newlines
+    cleaned = cleaned.replaceAll(RegExp(r' {3,}'), ' '); // Max 1 space
+    cleaned = cleaned.trim();
+    return cleaned;
+  }
+
+  List<String> _splitIntoChunks(String text, int maxLength) {
+    List<String> chunks = [];
+    int startIndex = 0;
+    
+    while (startIndex < text.length) {
+      int endIndex = startIndex + maxLength;
+      
+      if (endIndex >= text.length) {
+        // Last chunk
+        chunks.add(text.substring(startIndex));
+        break;
+      }
+      
+      // Try to split at sentence boundary
+      int lastPeriod = text.lastIndexOf('.', endIndex);
+      int lastExclamation = text.lastIndexOf('!', endIndex);
+      int lastQuestion = text.lastIndexOf('?', endIndex);
+      int lastLineBreak = text.lastIndexOf('\n', endIndex);
+      
+      int bestBreak = [lastPeriod, lastExclamation, lastQuestion, lastLineBreak]
+          .where((i) => i > startIndex + maxLength * 0.7)
+          .fold<int>(-1, (a, b) => a > b ? a : b);
+      
+      if (bestBreak > startIndex) {
+        endIndex = bestBreak + 1;
+      } else {
+        // Fallback: split at space
+        int lastSpace = text.lastIndexOf(' ', endIndex);
+        if (lastSpace > startIndex) {
+          endIndex = lastSpace + 1;
+        }
+      }
+      
+      chunks.add(text.substring(startIndex, endIndex).trim());
+      startIndex = endIndex;
+    }
+    
+    return chunks;
+  }
+
+  Future<void> _speakChunksSequentially(List<String> chunks) async {
+    for (int i = 0; i < chunks.length; i++) {
+      String chunk = chunks[i];
+      if (chunk.trim().isEmpty) continue;
+      
+      await _speakTextWithRetry(chunk);
+      
+      // Wait for current chunk to finish before starting next
+      while (_isPlaying) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      
+      // Small delay between chunks for smoother transition
+      if (i < chunks.length - 1) {
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+    }
+  }
+
+  Future<void> _speakTextWithRetry(String text) async {
+    bool success = false;
+    int retryCount = 0;
+    const maxRetries = 3;
+
+    while (!success && retryCount < maxRetries) {
+      try {
+        await _flutterTts.speak(text);
+        success = true;
+      } catch (e) {
+        retryCount++;
+        print('TTS Error (attempt $retryCount): $e');
+        
+        if (retryCount < maxRetries) {
+          // Đợi một chút trước khi thử lại
+          await Future.delayed(Duration(milliseconds: 500 * retryCount));
           
-          if (retryCount < maxRetries) {
-            // Đợi một chút trước khi thử lại
-            await Future.delayed(Duration(milliseconds: 500 * retryCount));
-            
-            // Thử khởi tạo lại TTS
-            if (retryCount == 2) {
+          // Thử khởi tạo lại TTS
+          if (retryCount == 2) {
+            try {
               await _flutterTts.stop();
               await Future.delayed(const Duration(milliseconds: 1000));
               await initialize();
+            } catch (initError) {
+              print('Error reinitializing TTS: $initError');
             }
-          } else {
-            throw e;
           }
+        } else {
+          throw e;
         }
       }
-    } catch (e) {
-      print('Error speaking text after retries: $e');
-      onError?.call('Không thể đọc văn bản. Vui lòng kiểm tra cài đặt TTS trên thiết bị.');
     }
   }
 
@@ -279,37 +366,65 @@ class AudioService {
       await initialize();
     }
 
-    // Tách văn bản thành các câu
-    List<String> sentences = _splitIntoSentences(text);
+    // Clean text first
+    String cleanedText = _cleanText(text);
     
-    for (String sentence in sentences) {
-      if (sentence.trim().isNotEmpty) {
-        await speak(sentence.trim());
-        // Đợi câu hiện tại đọc xong trước khi đọc câu tiếp theo
-        while (_isPlaying) {
-          await Future.delayed(const Duration(milliseconds: 100));
-        }
+    // Tách văn bản thành các câu
+    List<String> sentences = _splitIntoSentences(cleanedText);
+    
+    for (int i = 0; i < sentences.length; i++) {
+      String sentence = sentences[i].trim();
+      if (sentence.isEmpty) continue;
+      
+      // Use the retry mechanism for each sentence
+      await _speakTextWithRetry(sentence);
+      
+      // Đợi câu hiện tại đọc xong trước khi đọc câu tiếp theo
+      while (_isPlaying) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      
+      // Small pause between sentences for clarity
+      if (i < sentences.length - 1) {
+        await Future.delayed(const Duration(milliseconds: 300));
       }
     }
   }
 
   List<String> _splitIntoSentences(String text) {
-    // Tách văn bản thành các câu dựa trên dấu chấm, chấm hỏi, chấm than
+    // Tách văn bản thành các câu dựa trên dấu chấm, chấm hỏi, chấm than, xuống dòng
     List<String> sentences = [];
     String currentSentence = '';
     
     for (int i = 0; i < text.length; i++) {
       currentSentence += text[i];
       
+      // Check for sentence endings
       if (text[i] == '.' || text[i] == '!' || text[i] == '?' || text[i] == '。') {
-        sentences.add(currentSentence.trim());
-        currentSentence = '';
+        // Check if next char is whitespace or end of text
+        if (i == text.length - 1 || text[i + 1].trim().isEmpty) {
+          String trimmed = currentSentence.trim();
+          if (trimmed.isNotEmpty) {
+            sentences.add(trimmed);
+          }
+          currentSentence = '';
+        }
+      } else if (text[i] == '\n' && currentSentence.trim().isNotEmpty) {
+        // Also split on newlines if they're not followed by more newlines
+        if (i == text.length - 1 || text[i + 1] != '\n') {
+          String trimmed = currentSentence.trim();
+          if (trimmed.isNotEmpty) {
+            sentences.add(trimmed);
+          }
+          currentSentence = '';
+        }
       }
     }
     
     // Thêm câu cuối nếu còn
-    if (currentSentence.trim().isNotEmpty) {
-      sentences.add(currentSentence.trim());
+    String lastSentence = currentSentence.trim();
+    if (lastSentence.isNotEmpty) {
+      sentences.add(lastSentence);
     }
     
     return sentences;

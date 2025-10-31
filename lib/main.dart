@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/data_service.dart';
 import 'services/settings_service.dart';
+import 'services/reminder_service.dart';
+import 'utils/navigation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize data
   await DataService().initializeData();
+
+  // Initialize reminder service (will load reminders if exist)
+  await ReminderService().initializeReminders();
 
   // Load persisted settings
   await loadSettingsFromPrefs();
@@ -38,6 +43,10 @@ class _MyAppState extends State<MyApp> {
 
   void _onSettingsChanged() {
     setState(() {});
+  }
+
+  Widget _getInitialScreen() {
+    return const WelcomeScreen();
   }
 
   @override
@@ -100,6 +109,7 @@ class _MyAppState extends State<MyApp> {
     final darkTheme = ThemeData.dark().copyWith(useMaterial3: true);
 
     return MaterialApp(
+      navigatorKey: NavigationService.navigatorKey,
       title: 'App Tìm Bài Đọc Theo Ngày',
       theme: lightTheme,
       darkTheme: darkTheme,
@@ -111,9 +121,8 @@ class _MyAppState extends State<MyApp> {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      home: const LoginScreen(),
+      home: _getInitialScreen(),
       routes: {
-        '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
       },
     );

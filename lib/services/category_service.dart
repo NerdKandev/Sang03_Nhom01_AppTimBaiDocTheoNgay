@@ -19,6 +19,43 @@ class CategoryService {
     await _loadCategories();
   }
 
+  // Force reload from assets and replace or merge with existing categories
+  Future<void> reloadFromAssets({bool replace = false}) async {
+    try {
+      // Load categories from assets
+      final String jsonString = await rootBundle.loadString('assets/data/categories.json');
+      final Map<String, dynamic> data = json.decode(jsonString);
+      final List<dynamic> assetCategoriesData = data['categories'] ?? [];
+      final assetCategoriesList = assetCategoriesData.map((category) => CategoryModel.fromMap(category)).toList();
+      
+      if (replace) {
+        // Replace completely
+        _categories = assetCategoriesList;
+      } else {
+        // Merge: Remove old categories not in assets, add new ones from assets
+        final assetCategoryNames = assetCategoriesList.map((cat) => cat.name).toSet();
+        
+        // Remove categories that no longer exist in assets
+        _categories.removeWhere((cat) => !assetCategoryNames.contains(cat.name));
+        
+        // Add new categories from assets that don't exist in current list
+        for (var assetCat in assetCategoriesList) {
+          if (!_categories.any((cat) => cat.name == assetCat.name)) {
+            _categories.add(assetCat);
+            print('Added new category from assets: ${assetCat.name}');
+          }
+        }
+      }
+      
+      // Update statistics and save
+      await _saveCategories();
+      print('Reloaded ${_categories.length} categories from assets (replace: $replace)');
+    } catch (e) {
+      print('Error reloading from assets: $e');
+      rethrow;
+    }
+  }
+
   Future<void> _loadCategories() async {
     try {
       // Try to load from documents directory first
@@ -32,6 +69,9 @@ class CategoryService {
         _categories = categoriesData.map((category) => CategoryModel.fromMap(category)).toList();
         _statistics = data['statistics'] ?? {};
         print('Loaded ${_categories.length} categories from: ${file.path}');
+        
+        // Check if we need to merge with assets (compare with assets to see if there are new categories)
+        await _mergeWithAssetsIfNeeded();
       } else {
         // Load from assets if no file exists
         await _loadFromAssets();
@@ -43,6 +83,48 @@ class CategoryService {
       await _loadFromAssets();
     }
   }
+  
+  Future<void> _mergeWithAssetsIfNeeded() async {
+    try {
+      // Load categories from assets
+      final String jsonString = await rootBundle.loadString('assets/data/categories.json');
+      final Map<String, dynamic> data = json.decode(jsonString);
+      final List<dynamic> assetCategoriesData = data['categories'] ?? [];
+      final assetCategories = assetCategoriesData.map((category) => CategoryModel.fromMap(category)).toList();
+      
+      // Get list of category names from assets
+      final assetCategoryNames = assetCategories.map((cat) => cat.name).toSet();
+      
+      // Remove categories that no longer exist in assets (cleanup old categories)
+      bool hasChanges = false;
+      _categories.removeWhere((cat) {
+        if (!assetCategoryNames.contains(cat.name)) {
+          print('Removing old category not in assets: ${cat.name}');
+          hasChanges = true;
+          return true;
+        }
+        return false;
+      });
+      
+      // Add new categories from assets that don't exist in current list
+      for (var assetCat in assetCategories) {
+        if (!_categories.any((cat) => cat.name == assetCat.name)) {
+          // Add new category from assets
+          _categories.add(assetCat);
+          hasChanges = true;
+          print('Added new category from assets: ${assetCat.name}');
+        }
+      }
+      
+      if (hasChanges) {
+        await _saveCategories();
+        print('Synced categories with assets (removed old, added new)');
+      }
+    } catch (e) {
+      print('Error merging with assets: $e');
+    }
+  }
+  
 
   Future<void> _loadFromAssets() async {
     try {
@@ -63,8 +145,8 @@ class CategoryService {
     return [
       CategoryModel(
         id: '1',
-        name: 'Tịnh Độ',
-        description: 'Các kinh về cõi Tịnh Độ và Phật A Di Đà',
+        name: 'Kinh tụng hàng ngày',
+        description: 'Các kinh được tụng đọc hàng ngày trong tu tập',
         color: '#FF6B6B',
         icon: 'lotus',
         isActive: true,
@@ -73,13 +155,61 @@ class CategoryService {
         sutraCount: 0,
         order: 1,
       ),
+      CategoryModel(
+        id: '2',
+        name: 'Kinh cầu siêu',
+        description: 'Các kinh dùng để cầu siêu, hồi hướng công đức cho người đã khuất',
+        color: '#4ECDC4',
+        icon: 'book',
+        isActive: true,
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+        sutraCount: 0,
+        order: 2,
+      ),
+      CategoryModel(
+        id: '3',
+        name: 'Kinh sám hối',
+        description: 'Các kinh về sám hối, sửa đổi lỗi lầm và thanh tịnh tâm ý',
+        color: '#45B7D1',
+        icon: 'library',
+        isActive: true,
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+        sutraCount: 0,
+        order: 3,
+      ),
+      CategoryModel(
+        id: '4',
+        name: 'Kinh cầu an',
+        description: 'Các kinh dùng để cầu an, cầu phúc cho người sống',
+        color: '#96CEB4',
+        icon: 'category',
+        isActive: true,
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+        sutraCount: 0,
+        order: 4,
+      ),
+      CategoryModel(
+        id: '5',
+        name: 'Kinh tịnh độ',
+        description: 'Các kinh về cõi Tịnh Độ và Phật A Di Đà',
+        color: '#FFEAA7',
+        icon: 'lotus',
+        isActive: true,
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+        sutraCount: 0,
+        order: 5,
+      ),
     ];
   }
 
   Map<String, dynamic> _getDefaultStatistics() {
     return {
-      'totalCategories': 1,
-      'activeCategories': 1,
+      'totalCategories': 5,
+      'activeCategories': 5,
       'inactiveCategories': 0,
       'totalSutras': 0,
       'averageSutrasPerCategory': 0.0,
@@ -205,6 +335,35 @@ class CategoryService {
     } catch (e) {
       print('Error updating sutra count: $e');
       return false;
+    }
+  }
+
+  // Sync sutra counts from actual sutra data
+  // This counts sutras by category name and updates each category's sutraCount
+  Future<void> syncSutraCounts(Map<String, int> categoryCounts) async {
+    try {
+      bool hasChanges = false;
+      for (var category in _categories) {
+        final count = categoryCounts[category.name] ?? 0;
+        if (category.sutraCount != count) {
+          final index = _categories.indexWhere((cat) => cat.id == category.id);
+          if (index != -1) {
+            _categories[index] = _categories[index].copyWith(
+              sutraCount: count,
+              updatedAt: DateTime.now().toIso8601String(),
+            );
+            hasChanges = true;
+            print('Synced sutra count for "${category.name}": $count');
+          }
+        }
+      }
+      
+      if (hasChanges) {
+        await _saveCategories();
+        print('Sutra counts synced successfully');
+      }
+    } catch (e) {
+      print('Error syncing sutra counts: $e');
     }
   }
 
